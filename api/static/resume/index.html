@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LinkVault - Project Resume</title>
+    <link rel="stylesheet" href="/resume/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <section class="hero">
+        <p class="badge">Recruiter Testing View</p>
+        <h1>LinkVault</h1>
+        <p class="subtitle">
+          Production-grade URL shortener built with FastAPI, Redis, RabbitMQ, and observability tooling.
+        </p>
+        <div class="actions">
+          <a class="btn primary" href="https://github.com/mashinsp/LinkVault" target="_blank" rel="noreferrer">View GitHub Repo</a>
+          <a class="btn secondary" href="/docs" target="_blank" rel="noreferrer">Open API Docs</a>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>System Design</h2>
+        <p>
+          Architecture snapshot of LinkVault's API, cache, queue, worker, and observability stack.
+        </p>
+        <img
+          src="/resume/assets/system-design-linkvault.png"
+          alt="LinkVault system design diagram"
+          class="diagram"
+        />
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <h2>What</h2>
+          <ul>
+            <li>FastAPI service to create, redirect, inspect, and deactivate short links.</li>
+            <li>Key endpoints: <code>POST /links</code>, <code>GET /{shortcode}</code>, <code>GET /links/{shortcode}/stats</code>, <code>DELETE /links/{shortcode}</code>.</li>
+            <li>Health and platform visibility via <code>/health</code>, <code>/metrics</code>, and OpenAPI docs on <code>/docs</code>.</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2>How</h2>
+          <ul>
+            <li>Postgres stores links and click counts as system-of-record data.</li>
+            <li>Redis caches redirect data and reduces DB latency on hot shortcodes.</li>
+            <li>API publishes click events asynchronously to RabbitMQ for non-blocking redirects.</li>
+            <li>Worker consumes events, batches updates, and flushes aggregated counts to Postgres.</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2>Why</h2>
+          <ul>
+            <li>Keep redirect path fast and resilient by decoupling analytics updates from user response time.</li>
+            <li>Improve scalability under spikes through cache-first reads and queue-backed write smoothing.</li>
+            <li>Support production debugging with structured logs, distributed tracing, and metrics dashboards.</li>
+          </ul>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
