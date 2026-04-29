@@ -2,28 +2,48 @@ name: Deploy to EC2
 
 on:
   push:
-    branches:
-      - main
+    branches: ["main"]
+  workflow_dispatch:
 
 jobs:
   deploy:
     environment: linkvault
     runs-on: ubuntu-latest
     env:
-      DEPLOY_HOST: ${{ vars.EC2_HOST != '' && vars.EC2_HOST || secrets.EC2_HOST }}
-      DEPLOY_USER: ${{ vars.EC2_USER != '' && vars.EC2_USER || secrets.EC2_USER }}
-      DEPLOY_PORT: ${{ vars.EC2_PORT != '' && vars.EC2_PORT || secrets.EC2_PORT || '22' }}
+      EC2_HOST_RAW: ${{ vars.EC2_HOST != '' && vars.EC2_HOST || secrets.EC2_HOST }}
+      EC2_USER: ${{ vars.EC2_USER != '' && vars.EC2_USER || secrets.EC2_USER }}
+      EC2_PORT: ${{ vars.EC2_PORT != '' && vars.EC2_PORT || secrets.EC2_PORT || '22' }}
     steps:
+      - name: Check required deploy values
+        run: |
+          test -n "${EC2_HOST_RAW}" || (echo "EC2_HOST missing"; exit 1)
+          test -n "${EC2_USER}" || (echo "EC2_USER missing"; exit 1)
+          test -n "${{ secrets.EC2_SSH_KEY }}" || (echo "EC2_SSH_KEY missing"; exit 1)
+
+      - name: Normalize EC2 host
+        id: normalize_host
+        run: |
+          EC2_HOST_CLEAN="$(printf "%s" "${EC2_HOST_RAW}" | tr -d '\r\n\t ')"
+          if [[ -z "${EC2_HOST_CLEAN}" ]]; then
+            echo "EC2_HOST resolved empty after trimming."
+            exit 1
+          fi
+          if [[ "${EC2_HOST_CLEAN}" =~ ^https?:// ]]; then
+            echo "EC2_HOST must not include http:// or https://"
+            exit 1
+          fi
+          echo "ec2_host=${EC2_HOST_CLEAN}" >> "$GITHUB_OUTPUT"
+
       - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ env.DEPLOY_HOST }}
-          username: ${{ env.DEPLOY_USER }}
+          host: ${{ steps.normalize_host.outputs.ec2_host }}
+          username: ${{ env.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ env.DEPLOY_PORT }}
+          port: ${{ env.EC2_PORT }}
           command_timeout: 30m
           script: |
-            set -e
+            set -euo pipefail
             APP_DIR="$HOME/linkvault"
             REPO_URL="https://github.com/mashinsp/LinkVault.git"
 
@@ -38,6 +58,7 @@ jobs:
             fi
 
             cd "$APP_DIR"
+            git remote set-url origin "$REPO_URL"
             git checkout main || git checkout -b main
             for i in 1 2 3; do
               git fetch --depth 1 origin main && break
