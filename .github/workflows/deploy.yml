@@ -21,6 +21,7 @@ jobs:
           username: ${{ env.DEPLOY_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ env.DEPLOY_PORT }}
+          command_timeout: 30m
           script: |
             set -e
             APP_DIR="$HOME/linkvault"
@@ -28,11 +29,21 @@ jobs:
 
             if [ ! -d "$APP_DIR/.git" ]; then
               rm -rf "$APP_DIR"
-              git clone "$REPO_URL" "$APP_DIR"
+              for i in 1 2 3; do
+                git clone --depth 1 "$REPO_URL" "$APP_DIR" && break
+                echo "git clone failed (attempt $i). Retrying..."
+                rm -rf "$APP_DIR"
+                sleep 4
+              done
             fi
 
             cd "$APP_DIR"
-            git checkout main
-            git pull --ff-only origin main
+            git checkout main || git checkout -b main
+            for i in 1 2 3; do
+              git fetch --depth 1 origin main && break
+              echo "git fetch failed (attempt $i). Retrying..."
+              sleep 4
+            done
+            git reset --hard FETCH_HEAD
 
             bash deploy/ec2/deploy.sh
