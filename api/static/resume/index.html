@@ -3,63 +3,99 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LinkVault - Project Resume</title>
+    <title>LinkVault - Architecture Resume</title>
     <link rel="stylesheet" href="/resume/styles.css" />
   </head>
   <body>
-    <main class="container">
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+
+    <header class="topbar">
+      <div class="wrap topbar-inner">
+        <div class="brand">LINKVAULT</div>
+        <div class="badge">Recruiter Testing View</div>
+      </div>
+    </header>
+
+    <main class="wrap">
       <section class="hero">
-        <p class="badge">Recruiter Testing View</p>
-        <h1>LinkVault</h1>
-        <p class="subtitle">
-          Production-grade URL shortener built with FastAPI, Redis, RabbitMQ, and observability tooling.
+        <p class="eyebrow">Production Engineering Project</p>
+        <h1>
+          URL shortener built for
+          <span>systems thinking</span>
+        </h1>
+        <p class="hero-text">
+          LinkVault is a production-grade URL shortener with a fast redirect path, async click analytics,
+          and full observability. It is built to show practical backend architecture decisions and tradeoffs.
         </p>
+        <div class="tag-row">
+          <span class="tag cyan">FastAPI</span>
+          <span class="tag cyan">PostgreSQL</span>
+          <span class="tag amber">Redis Cache</span>
+          <span class="tag amber">RabbitMQ + DLQ</span>
+          <span class="tag purple">Async Worker</span>
+          <span class="tag green">OpenTelemetry</span>
+          <span class="tag green">Prometheus + Grafana</span>
+          <span class="tag cyan">Docker Compose</span>
+        </div>
         <div class="actions">
           <a class="btn primary" href="https://github.com/mashinsp/LinkVault" target="_blank" rel="noreferrer">View GitHub Repo</a>
           <a class="btn secondary" href="/docs" target="_blank" rel="noreferrer">Open API Docs</a>
         </div>
       </section>
 
-      <section class="card">
+      <section class="section">
+        <p class="section-label">01 / Architecture</p>
         <h2>System Design</h2>
-        <p>
-          Architecture snapshot of LinkVault's API, cache, queue, worker, and observability stack.
-        </p>
-        <img
-          src="/resume/assets/system-design-linkvault.png"
-          alt="LinkVault system design diagram"
-          class="diagram"
-        />
+        <div class="panel">
+          <img
+            src="/resume/assets/system-design-linkvault.png"
+            alt="LinkVault system design diagram"
+            class="diagram"
+          />
+        </div>
       </section>
 
-      <section class="grid">
-        <article class="card">
-          <h2>What</h2>
-          <ul>
-            <li>FastAPI service to create, redirect, inspect, and deactivate short links.</li>
-            <li>Key endpoints: <code>POST /links</code>, <code>GET /{shortcode}</code>, <code>GET /links/{shortcode}/stats</code>, <code>DELETE /links/{shortcode}</code>.</li>
-            <li>Health and platform visibility via <code>/health</code>, <code>/metrics</code>, and OpenAPI docs on <code>/docs</code>.</li>
-          </ul>
-        </article>
+      <section class="section">
+        <p class="section-label">02 / What / How / Why</p>
+        <h2>Design Summary</h2>
+        <div class="cards">
+          <article class="card">
+            <h3>What</h3>
+            <ul>
+              <li>Create short links with collision-safe shortcode generation.</li>
+              <li>Redirect via <code>GET /{shortcode}</code> with active/expiry checks.</li>
+              <li>Expose stats and management via <code>/links/{shortcode}/stats</code> and delete endpoints.</li>
+            </ul>
+          </article>
 
-        <article class="card">
-          <h2>How</h2>
-          <ul>
-            <li>Postgres stores links and click counts as system-of-record data.</li>
-            <li>Redis caches redirect data and reduces DB latency on hot shortcodes.</li>
-            <li>API publishes click events asynchronously to RabbitMQ for non-blocking redirects.</li>
-            <li>Worker consumes events, batches updates, and flushes aggregated counts to Postgres.</li>
-          </ul>
-        </article>
+          <article class="card">
+            <h3>How</h3>
+            <ul>
+              <li>Cache-aside reads in Redis for low-latency redirects.</li>
+              <li>Click events published to RabbitMQ without blocking redirect response.</li>
+              <li>Worker batches click updates and flushes to Postgres every few seconds.</li>
+            </ul>
+          </article>
 
-        <article class="card">
-          <h2>Why</h2>
-          <ul>
-            <li>Keep redirect path fast and resilient by decoupling analytics updates from user response time.</li>
-            <li>Improve scalability under spikes through cache-first reads and queue-backed write smoothing.</li>
-            <li>Support production debugging with structured logs, distributed tracing, and metrics dashboards.</li>
-          </ul>
-        </article>
+          <article class="card">
+            <h3>Why</h3>
+            <ul>
+              <li>Keeps the hot redirect path fast under load.</li>
+              <li>Improves resilience by isolating analytics from user-facing latency.</li>
+              <li>Enables production debugging with traces, metrics, and structured logs.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="section cta">
+        <h2>Try It</h2>
+        <p>Use the docs to test endpoints and evaluate architecture decisions quickly.</p>
+        <div class="actions">
+          <a class="btn primary" href="/docs" target="_blank" rel="noreferrer">Open Swagger Docs</a>
+          <a class="btn secondary" href="https://github.com/mashinsp/LinkVault" target="_blank" rel="noreferrer">GitHub Repository</a>
+        </div>
       </section>
     </main>
   </body>
