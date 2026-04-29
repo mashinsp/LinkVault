@@ -32,10 +32,7 @@ jobs:
             fi
 
             cd "$APP_DIR"
-            git fetch --all
-            git reset --hard origin/main
+            git checkout main
+            git pull --ff-only origin main
 
-            docker compose pull || true
-            docker compose up -d --build
-
-            curl -fsS http://localhost:8000/health
+            bash deploy/ec2/deploy.sh

@@ -85,3 +85,17 @@ cd ~/linkvault
 docker compose up -d --build
 curl -f http://localhost:8000/health
 ```
+
+Fast path (recommended for small EC2 instances):
+
+```bash
+cd ~/linkvault
+bash deploy/ec2/deploy.sh
+```
+
+Observability services are profile-gated and can be started when needed:
+
+```bash
+cd ~/linkvault
+docker compose --profile observability up -d
+```

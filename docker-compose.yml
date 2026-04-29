@@ -79,6 +79,7 @@ services:
       - redis_data:/data
 
   otel-collector:
+    profiles: ["observability"]
     image: otel/opentelemetry-collector-contrib:0.102.0
     ports:
       - "4317:4317"   # OTLP gRPC
@@ -91,6 +92,7 @@ services:
       - loki
 
   prometheus:
+    profiles: ["observability"]
     image: prom/prometheus:v2.52.0
     # Windows often excludes low ports (9090–9099, etc.); use a high host port.
     ports:
@@ -103,6 +105,7 @@ services:
       - --storage.tsdb.retention.time=7d
 
   tempo:
+    profiles: ["observability"]
     image: grafana/tempo:2.5.0
     ports:
       - "3200:3200"   # HTTP API
@@ -113,6 +116,7 @@ services:
     command: -config.file=/etc/tempo.yaml
 
   loki:
+    profiles: ["observability"]
     image: grafana/loki:3.0.0
     ports:
       - "3100:3100"
@@ -122,6 +126,7 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
 
   grafana:
+    profiles: ["observability"]
     image: grafana/grafana:11.0.0
     ports:
       - "3000:3000"
