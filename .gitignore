@@ -1,2 +1,5 @@
 #ignore environment variables
 .env
+
+__pycache__/
+*.py[cod]

@@ -19,7 +19,7 @@ jobs:
           test -n "${EC2_HOST_RAW}" || (echo "EC2_HOST missing"; exit 1)
           test -n "${EC2_USER}" || (echo "EC2_USER missing"; exit 1)
           test -n "${{ secrets.EC2_SSH_KEY }}" || (echo "EC2_SSH_KEY missing"; exit 1)
-          test -n "${{ secrets.REPO_DEPLOY_KEY }}" || (echo "REPO_DEPLOY_KEY missing"; exit 1)
+          test -n "${{ secrets.REPO_DEPLOY_KEY_B64 }}" || (echo "REPO_DEPLOY_KEY_B64 missing"; exit 1)
 
       - name: Normalize EC2 host
         id: normalize_host
@@ -50,9 +50,8 @@ jobs:
 
             mkdir -p "$HOME/.ssh"
             chmod 700 "$HOME/.ssh"
-            cat > "$HOME/.ssh/linkvault_repo_key" <<'EOF'
-            ${{ secrets.REPO_DEPLOY_KEY }}
-            EOF
+            # Single-line base64 avoids YAML-indented heredocs corrupting PEM (libcrypto error).
+            printf '%s' "${{ secrets.REPO_DEPLOY_KEY_B64 }}" | tr -d '\n\r\t ' | base64 -d > "$HOME/.ssh/linkvault_repo_key"
             chmod 600 "$HOME/.ssh/linkvault_repo_key"
             ssh-keyscan -H github.com >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
             chmod 644 "$HOME/.ssh/known_hosts"
@@ -60,22 +59,38 @@ jobs:
 
             if [ ! -d "$APP_DIR/.git" ]; then
               rm -rf "$APP_DIR"
+              CLONE_OK=0
               for i in 1 2 3; do
-                git clone --depth 1 "$REPO_SSH_URL" "$APP_DIR" && break
+                if git clone --depth 1 "$REPO_SSH_URL" "$APP_DIR"; then
+                  CLONE_OK=1
+                  break
+                fi
                 echo "git clone failed (attempt $i). Retrying..."
                 rm -rf "$APP_DIR"
                 sleep 4
               done
+              if [ "$CLONE_OK" -ne 1 ]; then
+                echo "git clone failed after retries."
+                exit 1
+              fi
             fi
 
             cd "$APP_DIR"
             git remote set-url origin "$REPO_SSH_URL"
             git checkout main || git checkout -b main
+            FETCH_OK=0
             for i in 1 2 3; do
-              git fetch --depth 1 origin main && break
+              if git fetch --depth 1 origin main; then
+                FETCH_OK=1
+                break
+              fi
               echo "git fetch failed (attempt $i). Retrying..."
               sleep 4
             done
+            if [ "$FETCH_OK" -ne 1 ]; then
+              echo "git fetch failed after retries."
+              exit 1
+            fi
             git reset --hard FETCH_HEAD
 
             bash deploy/ec2/deploy.sh

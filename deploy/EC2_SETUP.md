@@ -114,6 +114,12 @@ ssh-keygen -t ed25519 -C "linkvault-deploy" -f ./linkvault_deploy_key -N ""
    - GitHub repo -> Settings -> Deploy keys -> Add deploy key
    - Allow read access (write not required).
 
-3. Add private key (`linkvault_deploy_key`) as GitHub Actions secret:
-   - Name: `REPO_DEPLOY_KEY`
-   - Value: full private key content including BEGIN/END lines.
+3. Add the private key as a **single-line base64** GitHub Actions secret (avoids YAML corrupting multiline PEM in the deploy script):
+   - Name: `REPO_DEPLOY_KEY_B64`
+   - Value: output of (Linux):
+
+```bash
+base64 -w0 < linkvault_deploy_key
+```
+
+   On macOS use `base64 -i linkvault_deploy_key | tr -d '\n'`.
