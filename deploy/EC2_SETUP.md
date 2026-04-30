@@ -99,3 +99,21 @@ Observability services are profile-gated and can be started when needed:
 cd ~/linkvault
 docker compose --profile observability up -d
 ```
+
+## 7) GitHub Actions repo sync over SSH (recommended)
+
+The deploy workflow now syncs repo code on EC2 using SSH deploy key (not HTTPS), which is more reliable than `git pull https://...` on flaky networks.
+
+1. Generate a deploy key pair locally:
+
+```bash
+ssh-keygen -t ed25519 -C "linkvault-deploy" -f ./linkvault_deploy_key -N ""
+```
+
+2. Add public key (`linkvault_deploy_key.pub`) to this repo:
+   - GitHub repo -> Settings -> Deploy keys -> Add deploy key
+   - Allow read access (write not required).
+
+3. Add private key (`linkvault_deploy_key`) as GitHub Actions secret:
+   - Name: `REPO_DEPLOY_KEY`
+   - Value: full private key content including BEGIN/END lines.

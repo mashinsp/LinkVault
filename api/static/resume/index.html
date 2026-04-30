@@ -3,100 +3,192 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LinkVault - Architecture Resume</title>
+    <title>LinkVault — Architecture Resume</title>
     <link rel="stylesheet" href="/resume/styles.css" />
   </head>
   <body>
-    <div class="bg-orb orb-a"></div>
-    <div class="bg-orb orb-b"></div>
 
     <header class="topbar">
       <div class="wrap topbar-inner">
-        <div class="brand">LINKVAULT</div>
-        <div class="badge">Recruiter Testing View</div>
+        <div class="brand">LinkVault</div>
+        <div class="badge">Recruiter View</div>
       </div>
     </header>
 
     <main class="wrap">
+
+      <!-- ── HERO ── -->
       <section class="hero">
-        <p class="eyebrow">Production Engineering Project</p>
-        <h1>
-          URL shortener built for
-          <span>systems thinking</span>
-        </h1>
-        <p class="hero-text">
-          LinkVault is a production-grade URL shortener with a fast redirect path, async click analytics,
-          and full observability. It is built to show practical backend architecture decisions and tradeoffs.
-        </p>
-        <div class="tag-row">
-          <span class="tag cyan">FastAPI</span>
-          <span class="tag cyan">PostgreSQL</span>
-          <span class="tag amber">Redis Cache</span>
-          <span class="tag amber">RabbitMQ + DLQ</span>
-          <span class="tag purple">Async Worker</span>
-          <span class="tag green">OpenTelemetry</span>
-          <span class="tag green">Prometheus + Grafana</span>
-          <span class="tag cyan">Docker Compose</span>
+        <div class="hero-left">
+          <p class="eyebrow">Production Engineering Project</p>
+          <h1>URL shortener built for<br><em>systems thinking.</em></h1>
+          <p class="hero-text">
+            A production-grade URL shortener with a fast redirect path, async click analytics,
+            and full observability — built to demonstrate practical backend architecture
+            decisions and the tradeoffs behind them.
+          </p>
+          <div class="actions">
+            <a class="btn primary" href="https://github.com/mashinsp/LinkVault" target="_blank" rel="noreferrer">GitHub Repository</a>
+            <a class="btn secondary" href="/docs" target="_blank" rel="noreferrer">API Docs</a>
+          </div>
         </div>
-        <div class="actions">
-          <a class="btn primary" href="https://github.com/mashinsp/LinkVault" target="_blank" rel="noreferrer">View GitHub Repo</a>
-          <a class="btn secondary" href="/docs" target="_blank" rel="noreferrer">Open API Docs</a>
+
+        <div class="hero-right">
+          <div class="meta-block">
+            <div class="meta-row">
+              <span class="meta-key">API</span>
+              <span class="meta-val">FastAPI</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Database</span>
+              <span class="meta-val">PostgreSQL</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Cache</span>
+              <span class="meta-val">Redis</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Queue</span>
+              <span class="meta-val">RabbitMQ + DLQ</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Observability</span>
+              <span class="meta-val">OTel / Prometheus</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Infra</span>
+              <span class="meta-val">Docker Compose</span>
+            </div>
+          </div>
         </div>
       </section>
 
+      <!-- ── ARCHITECTURE ── -->
       <section class="section">
-        <p class="section-label">01 / Architecture</p>
+        <div class="section-label">01 / Architecture</div>
         <h2>System Design</h2>
-        <div class="panel">
-          <img
-            src="/resume/assets/system-design-linkvault.png"
-            alt="LinkVault system design diagram"
-            class="diagram"
-          />
+        <div class="diagram-wrap">
+          <div class="diagram-header">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <span class="diagram-title">system-design-linkvault.png</span>
+          </div>
+          <div class="diagram-body" id="diagramBody">
+            <img
+              src="/resume/assets/system-design-linkvault.png"
+              alt="LinkVault system design diagram"
+              class="diagram"
+              id="diagramImg"
+              onerror="handleImgError(this)"
+            />
+          </div>
         </div>
       </section>
 
+      <!-- ── DESIGN SUMMARY ── -->
       <section class="section">
-        <p class="section-label">02 / What / How / Why</p>
-        <h2>Design Summary</h2>
+        <div class="section-label">02 / Design Rationale</div>
+        <h2>What, How &amp; Why</h2>
         <div class="cards">
           <article class="card">
+            <div class="card-num">01</div>
             <h3>What</h3>
             <ul>
-              <li>Create short links with collision-safe shortcode generation.</li>
-              <li>Redirect via <code>GET /{shortcode}</code> with active/expiry checks.</li>
-              <li>Expose stats and management via <code>/links/{shortcode}/stats</code> and delete endpoints.</li>
+              <li>Short link creation with collision-safe shortcode generation</li>
+              <li>Redirect via <code>GET /{shortcode}</code> with active/expiry checks</li>
+              <li>Stats and management via <code>/links/{shortcode}/stats</code></li>
             </ul>
           </article>
-
           <article class="card">
+            <div class="card-num">02</div>
             <h3>How</h3>
             <ul>
-              <li>Cache-aside reads in Redis for low-latency redirects.</li>
-              <li>Click events published to RabbitMQ without blocking redirect response.</li>
-              <li>Worker batches click updates and flushes to Postgres every few seconds.</li>
+              <li>Cache-aside reads in Redis for low-latency redirects</li>
+              <li>Click events published to RabbitMQ without blocking the response</li>
+              <li>Worker batches click updates and flushes to Postgres periodically</li>
             </ul>
           </article>
-
           <article class="card">
+            <div class="card-num">03</div>
             <h3>Why</h3>
             <ul>
-              <li>Keeps the hot redirect path fast under load.</li>
-              <li>Improves resilience by isolating analytics from user-facing latency.</li>
-              <li>Enables production debugging with traces, metrics, and structured logs.</li>
+              <li>Keeps the hot redirect path fast under load</li>
+              <li>Isolates analytics from user-facing latency for resilience</li>
+              <li>Full observability via traces, metrics, and structured logs</li>
             </ul>
           </article>
         </div>
       </section>
 
+      <!-- ── STACK ── -->
+      <section class="section">
+        <div class="section-label">03 / Technology</div>
+        <h2>Stack</h2>
+        <div class="stack-grid">
+          <div class="stack-item">
+            <div class="stack-cat">Backend</div>
+            <div class="stack-tags">
+              <span class="tag">FastAPI</span>
+              <span class="tag">Python</span>
+              <span class="tag">SQLAlchemy</span>
+            </div>
+          </div>
+          <div class="stack-item">
+            <div class="stack-cat">Storage</div>
+            <div class="stack-tags">
+              <span class="tag">PostgreSQL</span>
+              <span class="tag">Redis</span>
+            </div>
+          </div>
+          <div class="stack-item">
+            <div class="stack-cat">Messaging</div>
+            <div class="stack-tags">
+              <span class="tag">RabbitMQ</span>
+              <span class="tag">Dead Letter Queue</span>
+              <span class="tag">Async Worker</span>
+            </div>
+          </div>
+          <div class="stack-item">
+            <div class="stack-cat">Observability</div>
+            <div class="stack-tags">
+              <span class="tag">OpenTelemetry</span>
+              <span class="tag">Prometheus</span>
+              <span class="tag">Grafana</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── CTA ── -->
       <section class="section cta">
-        <h2>Try It</h2>
-        <p>Use the docs to test endpoints and evaluate architecture decisions quickly.</p>
+        <h2>Explore the project.</h2>
+        <p>Use the Swagger docs to test endpoints live and evaluate the architecture decisions yourself.</p>
         <div class="actions">
           <a class="btn primary" href="/docs" target="_blank" rel="noreferrer">Open Swagger Docs</a>
           <a class="btn secondary" href="https://github.com/mashinsp/LinkVault" target="_blank" rel="noreferrer">GitHub Repository</a>
         </div>
       </section>
+
     </main>
+
+    <script>
+      function handleImgError(img) {
+        // Image couldn't load — show a clean placeholder instead
+        const body = document.getElementById('diagramBody');
+        body.innerHTML = `
+          <div class="arch-placeholder">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="1" y="1" width="38" height="38" rx="3" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M8 20h8M24 20h8M20 8v8M20 24v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="20" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+            <span>system-design-linkvault.png</span>
+            <span style="font-size:9px;opacity:.6">Place image at /resume/assets/</span>
+          </div>
+        `;
+      }
+    </script>
+
   </body>
 </html>

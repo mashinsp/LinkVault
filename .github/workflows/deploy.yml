@@ -19,6 +19,7 @@ jobs:
           test -n "${EC2_HOST_RAW}" || (echo "EC2_HOST missing"; exit 1)
           test -n "${EC2_USER}" || (echo "EC2_USER missing"; exit 1)
           test -n "${{ secrets.EC2_SSH_KEY }}" || (echo "EC2_SSH_KEY missing"; exit 1)
+          test -n "${{ secrets.REPO_DEPLOY_KEY }}" || (echo "REPO_DEPLOY_KEY missing"; exit 1)
 
       - name: Normalize EC2 host
         id: normalize_host
@@ -45,12 +46,22 @@ jobs:
           script: |
             set -euo pipefail
             APP_DIR="$HOME/linkvault"
-            REPO_URL="https://github.com/mashinsp/LinkVault.git"
+            REPO_SSH_URL="git@github.com:mashinsp/LinkVault.git"
+
+            mkdir -p "$HOME/.ssh"
+            chmod 700 "$HOME/.ssh"
+            cat > "$HOME/.ssh/linkvault_repo_key" <<'EOF'
+            ${{ secrets.REPO_DEPLOY_KEY }}
+            EOF
+            chmod 600 "$HOME/.ssh/linkvault_repo_key"
+            ssh-keyscan -H github.com >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
+            chmod 644 "$HOME/.ssh/known_hosts"
+            export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/linkvault_repo_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
 
             if [ ! -d "$APP_DIR/.git" ]; then
               rm -rf "$APP_DIR"
               for i in 1 2 3; do
-                git clone --depth 1 "$REPO_URL" "$APP_DIR" && break
+                git clone --depth 1 "$REPO_SSH_URL" "$APP_DIR" && break
                 echo "git clone failed (attempt $i). Retrying..."
                 rm -rf "$APP_DIR"
                 sleep 4
@@ -58,7 +69,7 @@ jobs:
             fi
 
             cd "$APP_DIR"
-            git remote set-url origin "$REPO_URL"
+            git remote set-url origin "$REPO_SSH_URL"
             git checkout main || git checkout -b main
             for i in 1 2 3; do
               git fetch --depth 1 origin main && break
