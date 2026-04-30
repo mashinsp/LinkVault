@@ -5,13 +5,111 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LinkVault — Architecture Resume</title>
     <link rel="stylesheet" href="/resume/styles.css" />
+    <style>
+      /* ── DIAGRAM CLICK HINT ── */
+      .diagram-body {
+        cursor: zoom-in;
+        position: relative;
+      }
+
+      .diagram-body .zoom-hint {
+        position: absolute;
+        bottom: 12px;
+        right: 12px;
+        font-family: 'DM Mono', monospace;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        color: #888580;
+        background: rgba(247, 246, 243, 0.88);
+        border: 1px solid #d6d3cc;
+        border-radius: 4px;
+        padding: 4px 9px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+
+      .diagram-body:hover .zoom-hint {
+        opacity: 1;
+      }
+
+      /* ── LIGHTBOX ── */
+      .lightbox {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        background: rgba(17, 17, 16, 0.85);
+        backdrop-filter: blur(6px);
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        animation: lb-in 0.18s ease;
+      }
+
+      .lightbox.open {
+        display: flex;
+      }
+
+      @keyframes lb-in {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+      }
+
+      .lightbox-inner {
+        position: relative;
+        max-width: min(1200px, 100%);
+        max-height: 90vh;
+        animation: lb-scale 0.18s ease;
+      }
+
+      @keyframes lb-scale {
+        from { transform: scale(0.96); opacity: 0; }
+        to   { transform: scale(1);    opacity: 1; }
+      }
+
+      .lightbox-inner img {
+        display: block;
+        max-width: 100%;
+        max-height: 90vh;
+        width: auto;
+        height: auto;
+        border-radius: 6px;
+        box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
+        object-fit: contain;
+      }
+
+      .lightbox-close {
+        position: absolute;
+        top: -14px;
+        right: -14px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #f7f6f3;
+        border: 1px solid #d6d3cc;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s;
+        z-index: 1;
+      }
+
+      .lightbox-close:hover {
+        background: #eeecea;
+      }
+
+      .lightbox-close svg {
+        display: block;
+      }
+    </style>
   </head>
   <body>
 
     <header class="topbar">
       <div class="wrap topbar-inner">
         <div class="brand">LinkVault</div>
-        <div class="badge">Recruiter View</div>
       </div>
     </header>
 
@@ -74,7 +172,7 @@
             <div class="dot"></div>
             <span class="diagram-title">system-design-linkvault.png</span>
           </div>
-          <div class="diagram-body" id="diagramBody">
+          <div class="diagram-body" id="diagramBody" onclick="openLightbox()">
             <img
               src="/resume/assets/system-design-linkvault.png"
               alt="LinkVault system design diagram"
@@ -82,6 +180,7 @@
               id="diagramImg"
               onerror="handleImgError(this)"
             />
+            <span class="zoom-hint">Click to enlarge</span>
           </div>
         </div>
       </section>
@@ -172,10 +271,52 @@
 
     </main>
 
+    <!-- ── LIGHTBOX ── -->
+    <div class="lightbox" id="lightbox" onclick="handleLightboxClick(event)">
+      <div class="lightbox-inner" id="lightboxInner">
+        <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1 1l10 10M11 1L1 11" stroke="#111110" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <img
+          src="/resume/assets/system-design-linkvault.png"
+          alt="LinkVault system design — full size"
+          id="lightboxImg"
+        />
+      </div>
+    </div>
+
     <script>
+      const lightbox = document.getElementById('lightbox');
+
+      function openLightbox() {
+        // Don't open if the image failed to load (placeholder showing)
+        if (!document.getElementById('diagramImg')) return;
+        lightbox.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeLightbox() {
+        lightbox.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+
+      function handleLightboxClick(e) {
+        // Close only when clicking the backdrop, not the image or close button
+        if (e.target === lightbox) closeLightbox();
+      }
+
+      // Close on Escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeLightbox();
+      });
+
       function handleImgError(img) {
-        // Image couldn't load — show a clean placeholder instead
+        // Remove zoom behaviour — nothing to enlarge
         const body = document.getElementById('diagramBody');
+        body.style.cursor = 'default';
+        body.removeAttribute('onclick');
         body.innerHTML = `
           <div class="arch-placeholder">
             <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
